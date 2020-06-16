@@ -12,6 +12,9 @@
     <Name>PyTorchTesting</Name>
     <RootNamespace>PyTorchTesting</RootNamespace>
     <InterpreterId>MSBuild|PyTorchTestEnv|$(MSBuildProjectFullPath)</InterpreterId>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>--render</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
