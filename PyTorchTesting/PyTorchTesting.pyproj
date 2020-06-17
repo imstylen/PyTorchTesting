@@ -4,14 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>02ee9690-9dd5-4ae0-bba3-5ffa3bc11467</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PyTorchTesting.py</StartupFile>
+    <StartupFile>AtariTest.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>PyTorchTesting</Name>
     <RootNamespace>PyTorchTesting</RootNamespace>
-    <InterpreterId>MSBuild|workenv|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|PyTorchTestEnv|$(MSBuildProjectFullPath)</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>
     </CommandLineArguments>
@@ -26,6 +26,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AtariTest.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AtariTest2.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Diagonal.py" />
     <Compile Include="PyTorchTesting.py" />
     <Compile Include="Reinforce.py">
