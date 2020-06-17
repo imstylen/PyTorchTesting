@@ -24,40 +24,37 @@ class Policy(nn.Module):
     def __init__(self):
         super(Policy, self).__init__()
 
-        self.fc1 = nn.Linear(128, 500)
-        #self.d1 = nn.Dropout(p = 0.1)
-
-        self.fc2 = nn.Linear(500, 500)
-        #self.d2 = nn.Dropout(p = 0.1)
+        self.fc1 = nn.Linear(128, 128)
 
         
-        self.fc3 = nn.Linear(500, 500)
-        #self.d3 = nn.Dropout(p = 0.1)
+        self.fc2 = nn.Linear(128, 100)
+        self.d1 = nn.Dropout(p=0.1)
 
-        
-        self.fc4 = nn.Linear(500, 500)
-        #self.d4 = nn.Dropout(p = 0.1)
+        self.fc3 = nn.Linear(100, 100)
+        self.d2 = nn.Dropout(p=0.1)
 
-        self.fc5 = nn.Linear(500, 4)
+        self.fc4 = nn.Linear(100, 50)
+        self.d3 = nn.Dropout(p=0.1)
+
+        self.fc5 = nn.Linear(50, 4)
 
         self.saved_log_probs = []
         self.rewards = []
 
     def forward(self, x):
         x = self.fc1(x)
-        #x = self.d1(x)
-        x = F.relu(x)
+        x = torch.sigmoid(x)
 
         x = self.fc2(x)
-        #x = self.d2(x)
+        x = self.d1(x)
         x = F.relu(x)
-
+        
         x = self.fc3(x)
-        #x = self.d3(x)
+        x = self.d2(x)
         x = F.relu(x)
 
         x = self.fc4(x)
-        #x = self.d4(x)
+        x = self.d3(x)
         x = F.relu(x)
 
         action_scores = self.fc5(x)
@@ -65,7 +62,7 @@ class Policy(nn.Module):
 
 
 policy = Policy()
-optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+optimizer = optim.Adam(policy.parameters(), lr=1e-3)
 eps = np.finfo(np.float32).eps.item()
 
 
@@ -103,19 +100,34 @@ def main():
     running_reward = 10
     for i_episode in count(1):
 
-        state, ep_reward = env.reset(), 0
+        env.seed(i_episode)
 
-        for t in range(1, 2000):  # Don't infinite loop while learning
+        state, ep_reward = env.reset(), 0
+        et_reward = 0
+        for t in range(1, 1000):  # Don't infinite loop while learning
             action = select_action(state)
             state, reward, done, _ = env.step(action)
+            
+            if et_reward>=3:
+                reward = reward*3
+            else:
+                reward = reward*0.1
+            reward = reward*10
+            
+            if done and et_reward == 0:
+                reward = -10
 
             if render:
                 env.render()
             policy.rewards.append(reward)
             ep_reward += reward
-
+            et_reward += reward
             if done:
-                break
+               env.reset()
+               print(et_reward)
+               et_reward = 0
+
+               #break
 
         running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
         finish_episode()
