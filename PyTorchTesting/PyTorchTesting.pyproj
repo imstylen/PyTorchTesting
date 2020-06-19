@@ -4,14 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>02ee9690-9dd5-4ae0-bba3-5ffa3bc11467</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>AtariTest.py</StartupFile>
+    <StartupFile>BreakoutV3.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>PyTorchTesting</Name>
     <RootNamespace>PyTorchTesting</RootNamespace>
-    <InterpreterId>MSBuild|PyTorchTestEnv|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|workenv|$(MSBuildProjectFullPath)</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>
     </CommandLineArguments>
@@ -32,7 +32,13 @@
     <Compile Include="AtariTest2.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BreakoutV3.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Diagonal.py" />
+    <Compile Include="Lunar.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PyTorchTesting.py" />
     <Compile Include="Reinforce.py">
       <SubType>Code</SubType>
