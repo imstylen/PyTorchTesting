@@ -1,3 +1,4 @@
+
 import argparse
 import gym
 import numpy as np
@@ -15,13 +16,12 @@ parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
 parser.add_argument('--seed', type=int, default=543, metavar='N',
                     help='random seed (default: 543)')
-parser.add_argument('--render', action='store_true',
-                    help='render the environment')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+
+parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='interval between training status logs (default: 10)')
 args = parser.parse_args()
 
-env = gym.make('LunarLander-v2')
+env = gym.make('Pong-ram-v0')
 env.seed(args.seed)
 torch.manual_seed(args.seed)
 
@@ -29,7 +29,7 @@ torch.manual_seed(args.seed)
 class Policy(nn.Module):
     def __init__(self):
         super(Policy, self).__init__()
-        self.fc1 = nn.Linear(8, 128)
+        self.fc1 = nn.Linear(128, 128)
         self.d1 = nn.Dropout(p=0.6)
 
         self.action_layer = nn.Linear(128, 4)
@@ -41,16 +41,13 @@ class Policy(nn.Module):
         x = self.fc1(x)
         x = self.d1(x)
         x = F.relu(x)
-        
-        
-
 
         action_scores = self.action_layer(x)
         return F.softmax(action_scores, dim=1)
 
 
 policy = Policy()
-optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+optimizer = optim.Adam(policy.parameters(), lr=1e-5)
 eps = np.finfo(np.float32).eps.item()
 
 
@@ -84,16 +81,27 @@ def finish_episode():
 
 def main():
     doRender = False;
-    running_reward = 10
+    
+    running_reward = 1
+
     for i_episode in count(1):
+        
+        env.seed(i_episode)
+        torch.manual_seed(i_episode)
+
         state, ep_reward = env.reset(), 0
+        
         for t in range(1, 10000):  # Don't infinite loop while learning
             action = select_action(state)
             state, reward, done, _ = env.step(action)
-            if args.render or doRender:
+            
+            if doRender:
                 env.render()
+
             policy.rewards.append(reward)
+
             ep_reward += reward
+
             if done:
                 break
 
@@ -102,7 +110,7 @@ def main():
         if i_episode % args.log_interval == 0:
             print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                   i_episode, ep_reward, running_reward))
-        if running_reward > env.spec.reward_threshold:
+        if running_reward > 10:
             print("Solved! Running reward is now {} and "
                   "the last episode runs to {} time steps!".format(running_reward, t))
             doRender = True
