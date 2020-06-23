@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>02ee9690-9dd5-4ae0-bba3-5ffa3bc11467</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Pong.py</StartupFile>
+    <StartupFile>ActorCritic.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -26,6 +26,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ActorCritic.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="AtariTest.py">
       <SubType>Code</SubType>
     </Compile>
