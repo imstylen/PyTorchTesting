@@ -4,14 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>02ee9690-9dd5-4ae0-bba3-5ffa3bc11467</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>BreakoutV3.py</StartupFile>
+    <StartupFile>ActorCritic.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>PyTorchTesting</Name>
     <RootNamespace>PyTorchTesting</RootNamespace>
-    <InterpreterId>MSBuild|workenv|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|PyTorchTestEnv|$(MSBuildProjectFullPath)</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>
     </CommandLineArguments>
@@ -26,6 +26,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ActorCritic.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="AtariTest.py">
       <SubType>Code</SubType>
     </Compile>
@@ -37,6 +40,9 @@
     </Compile>
     <Compile Include="Diagonal.py" />
     <Compile Include="Lunar.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Pong.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyTorchTesting.py" />
