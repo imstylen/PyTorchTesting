@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>PyTorchTesting</Name>
     <RootNamespace>PyTorchTesting</RootNamespace>
-    <InterpreterId>MSBuild|PyTorchTestEnv|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|workenv|$(MSBuildProjectFullPath)</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>
     </CommandLineArguments>
@@ -40,6 +40,9 @@
     </Compile>
     <Compile Include="Diagonal.py" />
     <Compile Include="Lunar.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="plotlog.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Pong.py">

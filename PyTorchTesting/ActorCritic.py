@@ -1,4 +1,3 @@
-
 import argparse
 import gym
 import numpy as np
@@ -10,17 +9,29 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
+import time
 
 # Cart Pole
 
-seed = 69
-gamma = 0.99
-log_interval = 1;
+parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
+parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
+                    help='discount factor (default: 0.99)')
+parser.add_argument('--seed', type=int, default=543, metavar='N',
+                    help='random seed (default: 543)')
+parser.add_argument('--render', action='store_true',
+                    help='render the environment')
+parser.add_argument('--log-interval', type=int, default=1, metavar='N',
+                    help='interval between training status logs (default: 10)')
+args = parser.parse_args()
+
+RENDER = True
 env = gym.make('Pong-ram-v0')
-env.seed(seed)
-torch.manual_seed(seed)
+env.seed(args.seed)
+torch.manual_seed(args.seed)
 
-
+save_interval = 10
+loadfile = None
+#loadfile = "Model-20200626-145017"
 SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 
 
@@ -30,13 +41,15 @@ class Policy(nn.Module):
     """
     def __init__(self):
         super(Policy, self).__init__()
-        self.affine1 = nn.Linear(128, 250)
+        self.fc1 = nn.Linear(128, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, 128)
 
         # actor's layer
-        self.action_head = nn.Linear(250, 4)
+        self.action_head = nn.Linear(128, 4)
 
         # critic's layer
-        self.value_head = nn.Linear(250, 1)
+        self.value_head = nn.Linear(128, 1)
 
         # action & reward buffer
         self.saved_actions = []
@@ -46,7 +59,9 @@ class Policy(nn.Module):
         """
         forward of both actor and critic
         """
-        x = F.relu(self.affine1(x))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
 
         # actor: choses action to take from state s_t 
         # by returning probability of each action
@@ -60,9 +75,14 @@ class Policy(nn.Module):
         # 2. the value from state s_t 
         return action_prob, state_values
 
+if loadfile == None:
+    model = Policy()
+else:
+    model = torch.load("Saves/" + loadfile + ".model")
 
-model = Policy()
-optimizer = optim.Adam(model.parameters(), lr=3e-2)
+
+optimizer = optim.RMSprop(model.parameters(), lr=1)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=10,gamma=0.1,last_epoch=30)
 eps = np.finfo(np.float32).eps.item()
 
 
@@ -96,10 +116,10 @@ def finish_episode():
     # calculate the true value using rewards returned from the environment
     for r in model.rewards[::-1]:
         # calculate the discounted value
-        R = r + gamma * R
+        R = r + args.gamma * R
         returns.insert(0, R)
 
-    returns = torch.tensor(returns)
+    returns = torch.tensor(returns).float()
     returns = (returns - returns.mean()) / (returns.std() + eps)
 
     for (log_prob, value), R in zip(saved_actions, returns):
@@ -120,14 +140,13 @@ def finish_episode():
     # perform backprop
     loss.backward()
     optimizer.step()
-
+    scheduler.step()
     # reset rewards and action buffer
     del model.rewards[:]
     del model.saved_actions[:]
 
 
 def main():
-    doRender = False
     running_reward = 10
 
     # run inifinitely many episodes
@@ -147,7 +166,7 @@ def main():
             # take the action
             state, reward, done, _ = env.step(action)
 
-            if doRender:
+            if RENDER:
                 env.render()
 
             model.rewards.append(reward)
@@ -161,19 +180,25 @@ def main():
         # perform backprop
         finish_episode()
 
+        if i_episode % save_interval == 0:
+            timestr = time.strftime("%Y%m%d-%H%M%S")
+            filename = "Model-" + timestr + ".model"
+            filepath = "Saves/"+filename
+            torch.save(model, filepath)
+
         # log results
-        if i_episode % log_interval == 0:
+        if i_episode % args.log_interval == 0:
             print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                   i_episode, ep_reward, running_reward))
-        
-        if i_episode % 10 == 0:
-            doRender = not(doRender)
+            logfile = open("log.log",'a')
+            logfile.write(str(running_reward) + "\n")
+            logfile.close()
+
         # check if we have "solved" the cart pole problem
-        if running_reward > 10:
-            #print("Solved! Running reward is now {} and "
-            #      "the last episode runs to {} time steps!".format(running_reward, t))
-            #break
-            doRender = True;
+        if running_reward > 190:
+            print("Solved! Running reward is now {} and "
+                  "the last episode runs to {} time steps!".format(running_reward, t))
+            break
 
 
 if __name__ == '__main__':
