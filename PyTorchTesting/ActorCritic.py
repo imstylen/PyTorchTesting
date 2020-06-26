@@ -3,16 +3,13 @@ import gym
 import numpy as np
 from itertools import count
 from collections import namedtuple
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
 import time
-
-# Cart Pole
-
+from tqdm import tqdm
 parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
@@ -31,7 +28,7 @@ torch.manual_seed(args.seed)
 
 save_interval = 10
 loadfile = None
-#loadfile = "Model-20200626-145017"
+#loadfile = "Model-20200626-165916"
 SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 
 
@@ -43,10 +40,10 @@ class Policy(nn.Module):
         super(Policy, self).__init__()
         self.fc1 = nn.Linear(128, 128)
         self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 128)
+        #self.fc3 = nn.Linear(128, 128)
 
         # actor's layer
-        self.action_head = nn.Linear(128, 4)
+        self.action_head = nn.Linear(128, 6)
 
         # critic's layer
         self.value_head = nn.Linear(128, 1)
@@ -61,7 +58,7 @@ class Policy(nn.Module):
         """
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
+        #x = F.relu(self.fc3(x))
 
         # actor: choses action to take from state s_t 
         # by returning probability of each action
@@ -81,8 +78,7 @@ else:
     model = torch.load("Saves/" + loadfile + ".model")
 
 
-optimizer = optim.RMSprop(model.parameters(), lr=1)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=10,gamma=0.1,last_epoch=30)
+optimizer = optim.RMSprop(model.parameters(), lr=0.01)
 eps = np.finfo(np.float32).eps.item()
 
 
@@ -140,7 +136,7 @@ def finish_episode():
     # perform backprop
     loss.backward()
     optimizer.step()
-    scheduler.step()
+
     # reset rewards and action buffer
     del model.rewards[:]
     del model.saved_actions[:]
@@ -150,7 +146,7 @@ def main():
     running_reward = 10
 
     # run inifinitely many episodes
-    for i_episode in count(1):
+    for i_episode in tqdm(range(10000)):
 
         # reset environment and episode reward
         state = env.reset()
@@ -188,7 +184,7 @@ def main():
 
         # log results
         if i_episode % args.log_interval == 0:
-            print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
+            print('\nEpisode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                   i_episode, ep_reward, running_reward))
             logfile = open("log.log",'a')
             logfile.write(str(running_reward) + "\n")
