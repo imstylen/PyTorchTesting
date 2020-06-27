@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>PyTorchTesting</Name>
     <RootNamespace>PyTorchTesting</RootNamespace>
-    <InterpreterId>MSBuild|workenv|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|PyTorchTestEnv|$(MSBuildProjectFullPath)</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>
     </CommandLineArguments>
@@ -29,29 +29,17 @@
     <Compile Include="ActorCritic.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AtariTest.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AtariTest2.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BreakoutV3.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Diagonal.py" />
+    <Compile Include="EnvTest.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Lunar.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="plotlog.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Pong.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="PyTorchTesting.py" />
-    <Compile Include="Reinforce.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="XOR.py">
       <SubType>Code</SubType>
     </Compile>

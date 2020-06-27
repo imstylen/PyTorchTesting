@@ -10,6 +10,8 @@ import torch.optim as optim
 from torch.distributions import Categorical
 import time
 from tqdm import tqdm
+import random 
+
 parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
@@ -21,6 +23,8 @@ parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='interval between training status logs (default: 10)')
 args = parser.parse_args()
 
+EXPLORE = False
+
 RENDER = True
 env = gym.make('Pong-ram-v0')
 env.seed(args.seed)
@@ -28,7 +32,7 @@ torch.manual_seed(args.seed)
 
 save_interval = 10
 loadfile = None
-#loadfile = "Model-20200626-165916"
+#loadfile = "Model-20200626-201149"
 SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 
 
@@ -39,11 +43,11 @@ class Policy(nn.Module):
     def __init__(self):
         super(Policy, self).__init__()
         self.fc1 = nn.Linear(128, 128)
-        self.fc2 = nn.Linear(128, 128)
+        #self.fc2 = nn.Linear(128, 128)
         #self.fc3 = nn.Linear(128, 128)
 
         # actor's layer
-        self.action_head = nn.Linear(128, 6)
+        self.action_head = nn.Linear(128, 3)
 
         # critic's layer
         self.value_head = nn.Linear(128, 1)
@@ -57,7 +61,7 @@ class Policy(nn.Module):
         forward of both actor and critic
         """
         x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        #x = F.relu(self.fc2(x))
         #x = F.relu(self.fc3(x))
 
         # actor: choses action to take from state s_t 
@@ -91,12 +95,15 @@ def select_action(state):
 
     # and sample an action using the distribution
     action = m.sample()
+    
+    if EXPLORE:
+        action = torch.tensor(random.randint(0,2))
 
     # save to action buffer
     model.saved_actions.append(SavedAction(m.log_prob(action), state_value))
 
     # the action to take (left or right)
-    return action.item()
+    return action.item()+1
 
 
 def finish_episode():
@@ -120,19 +127,20 @@ def finish_episode():
 
     for (log_prob, value), R in zip(saved_actions, returns):
         advantage = R - value.item()
-
         # calculate actor (policy) loss 
-        policy_losses.append(-log_prob * advantage)
+        policy_losses.append(-log_prob * advantage*1000)
 
         # calculate critic (value) loss using L1 smooth loss
-        value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
+        
+        value_losses.append(F.smooth_l1_loss(value, torch.tensor([R]))/1000)
 
     # reset gradients
     optimizer.zero_grad()
 
     # sum up all the values of policy_losses and value_losses
     loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
-
+    print(loss)
+    print(torch.stack(policy_losses).sum())
     # perform backprop
     loss.backward()
     optimizer.step()
@@ -146,7 +154,7 @@ def main():
     running_reward = 10
 
     # run inifinitely many episodes
-    for i_episode in tqdm(range(10000)):
+    for i_episode in (range(10000)):
 
         # reset environment and episode reward
         state = env.reset()
