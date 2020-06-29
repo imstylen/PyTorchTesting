@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.distributions import Categorical
 import gym
+import time
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -24,31 +25,29 @@ class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim, n_latent_var):
         super(ActorCritic, self).__init__()
 
-        # actor
-        self.action_layer = nn.Sequential(
+        self.shared_layer = nn.Sequential(
                 nn.Linear(state_dim, n_latent_var),
                 nn.Tanh(),
                 nn.Linear(n_latent_var, n_latent_var),
-                nn.Tanh(),
+                nn.ReLU()
+            )
+
+        # actor
+        self.action_layer = nn.Sequential(
                 nn.Linear(n_latent_var, action_dim),
                 nn.Softmax(dim=-1)
                 )
         
         # critic
-        self.value_layer = nn.Sequential(
-                nn.Linear(state_dim, n_latent_var),
-                nn.Tanh(),
-                nn.Linear(n_latent_var, n_latent_var),
-                nn.Tanh(),
-                nn.Linear(n_latent_var, 1)
-                )
+        self.value_layer = nn.Linear(n_latent_var, 1)
+     
         
     def forward(self):
         raise NotImplementedError
         
     def act(self, state, memory):
         state = torch.from_numpy(state).float().to(device) 
-        action_probs = self.action_layer(state)
+        action_probs = self.action_layer(self.shared_layer(state))
         dist = Categorical(action_probs)
         action = dist.sample()
         
@@ -60,13 +59,13 @@ class ActorCritic(nn.Module):
     
     def evaluate(self, state, action):
 
-        action_probs = self.action_layer(state)
+        action_probs = self.action_layer(self.shared_layer(state))
         dist = Categorical(action_probs)
         
         action_logprobs = dist.log_prob(action)
         dist_entropy = dist.entropy()
         
-        state_value = self.value_layer(state)
+        state_value = self.value_layer(self.shared_layer(state))
         
         return action_logprobs, torch.squeeze(state_value), dist_entropy
         
@@ -85,6 +84,12 @@ class PPO:
         
         self.MseLoss = nn.MSELoss()
     
+    def save(self):
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        filename = "Model-" + timestr + ".model"
+        filepath = "Saves/"+filename
+        torch.save(self.policy, filepath)
+
     def update(self, memory):   
         # Monte Carlo estimate of state rewards:
         rewards = []
@@ -134,20 +139,21 @@ def main():
     # creating environment
     env = gym.make(env_name)
     state_dim = env.observation_space.shape[0]
-    action_dim = 5
-    render = True
+    action_dim = 4
+    render = False
     solved_reward = 230         # stop training if avg_reward > solved_reward
-    log_interval = 20           # print avg reward in the interval
+    log_interval = 1           # print avg reward in the interval
     max_episodes = 50000        # max training episodes
-    max_timesteps = 1000         # max timesteps in one episode
-    n_latent_var = 128           # number of variables in hidden layer
-    update_timestep = 2000      # update policy every n timesteps
+    max_timesteps = 10000         # max timesteps in one episode
+    n_latent_var = 128          # number of variables in hidden layer
+    update_timestep = 1000      # update policy every n timesteps
     lr = 0.002
     betas = (0.9, 0.999)
     gamma = 0.99                # discount factor
     K_epochs = 4                # update policy for K epochs
     eps_clip = 0.2              # clip parameter for PPO
-    random_seed = None
+    random_seed = 69
+    save_interval = 10
     #############################################
     
     if random_seed:
@@ -159,6 +165,7 @@ def main():
     print(lr,betas)
     
     # logging variables
+    avg_reward = 0 
     running_reward = 0
     avg_length = 0
     timestep = 0
@@ -166,31 +173,41 @@ def main():
     # training loop
     for i_episode in range(1, max_episodes+1):
         state = env.reset()
+        doUpdate = False
+
         for t in range(max_timesteps):
             timestep += 1
             
             # Running policy_old:
             action = ppo.policy_old.act(state, memory)
+
             state, reward, done, _ = env.step(action)
-            
+
+
+                
+
             # Saving reward and is_terminal:
             memory.rewards.append(reward)
             memory.is_terminals.append(done)
             
             # update if its time
             if timestep % update_timestep == 0:
-                ppo.update(memory)
-                memory.clear_memory()
-                timestep = 0
+                doUpdate = True
             
             running_reward += reward
             if render:
                 env.render()
+
+            if doUpdate and done:
+                ppo.update(memory)
+                memory.clear_memory()
+                timestep = 0
+
             if done:
                 break
                 
         avg_length += t
-        
+        avg_reward = avg_reward*0.95 + 0.05*running_reward
         # stop training if avg_reward > solved_reward
         if running_reward > (log_interval*solved_reward):
             print("########## Solved! ##########")
@@ -202,9 +219,11 @@ def main():
             avg_length = int(avg_length/log_interval)
             running_reward = int((running_reward/log_interval))
             
-            print('Episode {} \t avg length: {} \t reward: {}'.format(i_episode, avg_length, running_reward))
+            print('Episode {} \t avg length: {} \t reward: {} \t avg: {}'.format(i_episode, avg_length, running_reward,avg_reward))
             running_reward = 0
             avg_length = 0
+        if i_episode % save_interval == 0:
+            ppo.save()
             
 if __name__ == '__main__':
     main()
