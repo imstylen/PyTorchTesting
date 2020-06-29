@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>02ee9690-9dd5-4ae0-bba3-5ffa3bc11467</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ActorCritic.py</StartupFile>
+    <StartupFile>PPO.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -37,6 +37,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="plotlog.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PPO.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyTorchTesting.py" />
