@@ -5,7 +5,7 @@ import gym
 import time
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+load_file = None
 class Memory:
     def __init__(self):
         self.actions = []
@@ -77,7 +77,11 @@ class PPO:
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
         
-        self.policy = ActorCritic(state_dim, action_dim, n_latent_var).to(device)
+        if load_file != None:
+            self.policy = torch.load(load_file).to(device)
+        else:
+            self.policy = ActorCritic(state_dim, action_dim, n_latent_var).to(device)
+
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr, betas=betas)
         self.policy_old = ActorCritic(state_dim, action_dim, n_latent_var).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
@@ -138,6 +142,7 @@ def main():
     env_name = "Pong-ram-v0"
     # creating environment
     env = gym.make(env_name)
+    
     state_dim = env.observation_space.shape[0]
     action_dim = 4
     render = False
@@ -145,9 +150,9 @@ def main():
     log_interval = 1           # print avg reward in the interval
     max_episodes = 50000        # max training episodes
     max_timesteps = 10000         # max timesteps in one episode
-    n_latent_var = 128          # number of variables in hidden layer
+    n_latent_var = 64          # number of variables in hidden layer
     update_timestep = 1000      # update policy every n timesteps
-    lr = 0.002
+    lr = 0.01
     betas = (0.9, 0.999)
     gamma = 0.99                # discount factor
     K_epochs = 4                # update policy for K epochs
@@ -172,7 +177,7 @@ def main():
     
     # training loop
     for i_episode in range(1, max_episodes+1):
-        state = env.reset()
+        state = env.reset()/255
         doUpdate = False
 
         for t in range(max_timesteps):
@@ -182,6 +187,7 @@ def main():
             action = ppo.policy_old.act(state, memory)
 
             state, reward, done, _ = env.step(action)
+            state = state/255
 
 
                 
