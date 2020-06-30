@@ -5,7 +5,7 @@ import gym
 import time
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-load_file = None
+load_file = "Saves/Model-20200630-094157.model"
 class Memory:
     def __init__(self):
         self.actions = []
@@ -88,9 +88,9 @@ class PPO:
         
         self.MseLoss = nn.MSELoss()
     
-    def save(self):
+    def save(self,reward):
         timestr = time.strftime("%Y%m%d-%H%M%S")
-        filename = "Model-" + timestr + ".model"
+        filename = "Model-"+ str(reward)+ "-" + timestr + ".model"
         filepath = "Saves/"+filename
         torch.save(self.policy, filepath)
 
@@ -145,14 +145,14 @@ def main():
     
     state_dim = env.observation_space.shape[0]
     action_dim = 4
-    render = False
+    render = True
     solved_reward = 230         # stop training if avg_reward > solved_reward
     log_interval = 1           # print avg reward in the interval
     max_episodes = 50000        # max training episodes
     max_timesteps = 10000         # max timesteps in one episode
-    n_latent_var = 64          # number of variables in hidden layer
+    n_latent_var = 128          # number of variables in hidden layer
     update_timestep = 1000      # update policy every n timesteps
-    lr = 0.01
+    lr = 0.001
     betas = (0.9, 0.999)
     gamma = 0.99                # discount factor
     K_epochs = 4                # update policy for K epochs
@@ -229,7 +229,7 @@ def main():
             running_reward = 0
             avg_length = 0
         if i_episode % save_interval == 0:
-            ppo.save()
+            ppo.save(int(avg_reward))
             
 if __name__ == '__main__':
     main()
